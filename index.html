@@ -10,25 +10,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
 
     <style>
+        /* ================= ส่วนพื้นฐาน (Desktop & รวม) ================= */
         body { 
             font-family: 'Itim', cursive, sans-serif; 
             text-align: center; 
             margin: 0; 
             padding: 0;
-            overflow: hidden; 
+            overflow: hidden; /* ซ่อนแถบเลื่อน */
             background-color: #87CEEB; 
             user-select: none; 
             -webkit-user-select: none;
-            /* ป้องกันหน้าจอเด้ง เลื่อน หรือ Pull-to-refresh บนมือถือ */
-            touch-action: none; 
+            touch-action: none; /* ห้ามปัดจอเพื่อเลื่อน */
         }
         
-        /* จะถูกควบคุมขนาดด้วย JavaScript ให้พอดีจอ 100% เสมอ */
         #game-screen { 
             position: absolute; 
             top: 0; left: 0; 
-            width: 100%; height: 100%;
+            width: 100vw; height: 100vh;
             overflow: hidden;
+            /* ป้องกันการโดนบีบแบนเมื่อคีย์บอร์ดเด้ง */
+            min-height: 320px; 
         }
 
         /* ---------------- ฉาก ---------------- */
@@ -51,14 +52,14 @@
 
         /* ---------------- ตัวละคร ---------------- */
         .character {
-            position: absolute; bottom: 14%; width: 15vw; 
-            min-width: 70px; max-width: 120px; z-index: 4;
+            position: absolute; bottom: 13%; width: 15vw; 
+            min-width: 80px; max-width: 120px; z-index: 4;
             transition: all 0.3s ease;
         }
         #player { left: 15%; }
         #enemy { right: 15%; transform: scaleX(-1); }
 
-        /* แอนิเมชันตัวละคร */
+        /* แอนิเมชัน */
         @keyframes idleBreathing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .idle-anim { animation: idleBreathing 2s ease-in-out infinite; }
         
@@ -79,14 +80,13 @@
         @keyframes floatCloud { from { left: -200px; } to { left: 110vw; } }
         @keyframes floatCloudReverse { from { right: -200px; } to { right: 110vw; } }
 
-        /* ดาเมจลอยขึ้น */
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
             100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
         }
         .dmg-text {
             position: absolute; bottom: 35%; z-index: 50;
-            font-size: 6vh; color: white; 
+            font-size: 40px; color: white; 
             text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
             animation: floatUp 1s ease-out forwards; pointer-events: none;
         }
@@ -94,19 +94,19 @@
         /* ---------------- UI หลอดเลือด ---------------- */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         .hp-container {
-            position: absolute; top: 15px; width: 28vw; min-width: 120px;
+            position: absolute; top: 20px; width: 25vw; min-width: 180px;
             background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 15px; color: white; 
-            font-size: 2.5vh; border: 2px solid rgba(255,255,255,0.2); letter-spacing: 1px;
+            font-size: 20px; border: 2px solid rgba(255,255,255,0.2); letter-spacing: 1px;
         }
-        #player-hp-box { left: max(15px, env(safe-area-inset-left)); text-align: left; }
-        #enemy-hp-box { right: max(15px, env(safe-area-inset-right)); text-align: right; }
+        #player-hp-box { left: max(20px, env(safe-area-inset-left)); text-align: left; }
+        #enemy-hp-box { right: max(20px, env(safe-area-inset-right)); text-align: right; }
         .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 2px solid #fff;}
         .hp-bar-fill { height: 100%; background: #28a745; width: 100%; transition: width 0.3s; }
         #enemy-hp-fill { background: #dc3545; }
 
-        /* ---------------- แผงควบคุม ---------------- */
+        /* ---------------- แผงควบคุม (ปุ่มด้านล่าง) ---------------- */
         #control-panel {
-            position: absolute; bottom: 3%; left: 0; width: 100%; 
+            position: absolute; bottom: 5%; left: 0; width: 100%; 
             background: transparent; border: none; pointer-events: none; 
             display: flex; justify-content: center; align-items: flex-end; z-index: 20;
             padding-bottom: env(safe-area-inset-bottom);
@@ -115,7 +115,7 @@
         #action-buttons, #math-box-wrapper { pointer-events: auto; }
 
         button {
-            padding: 1.5vh 3vw; font-size: 2.2vh; font-family: 'Itim', cursive; 
+            padding: 12px 24px; font-size: 20px; font-family: 'Itim', cursive; 
             border: none; border-radius: 50px;
             cursor: pointer; margin: 0 10px; transition: 0.1s; 
             box-shadow: 0 5px #999; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
@@ -124,22 +124,20 @@
         .btn-attack { background-color: #ff9800; color: white; box-shadow: 0 5px #c57600; }
         .btn-magic { background-color: #9c27b0; color: white; box-shadow: 0 5px #6d1b7b; }
 
-        /* กล่องตอบคำถาม & หลอดเวลา */
+        /* ---------------- กล่องคณิตศาสตร์ ---------------- */
         #math-box { display: none; text-align: center; width: 100%; justify-content: center; pointer-events: auto; }
         #math-box-wrapper {
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border: 3px solid #9c27b0;
+            padding: 15px 25px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 3px solid #9c27b0;
         }
         #math-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        #question { font-size: 3.5vh; margin: 0; color: #333; letter-spacing: 2px; }
+        #question { font-size: 28px; margin: 0; color: #333; letter-spacing: 2px; }
         #math-box input { 
-            font-family: 'Itim', cursive; font-size: 3vh; width: 70px; text-align: center; padding: 5px; 
+            font-family: 'Itim', cursive; font-size: 24px; width: 80px; text-align: center; padding: 5px; 
             border: 2px solid #ccc; border-radius: 8px; outline: none; 
         }
-        #timer-bg { width: 100%; height: 6px; background: #ddd; border-radius: 5px; margin-top: 15px; overflow: hidden; }
+        #timer-bg { width: 100%; height: 8px; background: #ddd; border-radius: 5px; margin-top: 15px; overflow: hidden; }
         #timer-fill { height: 100%; background: #ff4444; width: 100%; }
 
         /* ---------------- เมนูจบเกม ---------------- */
@@ -151,37 +149,54 @@
         }
         .modal-card {
             background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            padding: 40px; border-radius: 25px; border: 4px solid #fff;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            padding: 40px; border-radius: 25px; border: 4px solid #fff; text-align: center;
         }
-        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        #game-over-title { color: white; font-size: 6vh; margin-top: 0; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        #game-over-title { color: white; font-size: 40px; margin-top: 0; margin-bottom: 30px; }
         .btn-restart { 
             background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); 
-            color: #000; font-size: 3vh; padding: 15px 30px; 
-            border: 3px solid #fff; box-shadow: 0 5px #00a4ad, 0 10px 20px rgba(0,0,0,0.3); 
+            color: #000; font-size: 24px; padding: 15px 30px; border: 3px solid #fff; 
         }
-        .btn-restart:active { box-shadow: 0 2px #00a4ad; transform: translateY(3px); }
 
-        /* ---------------- ระบบบังคับแนวนอน ---------------- */
+        /* ---------------- ระบบเตือนแนวตั้ง ---------------- */
         #orientation-warning {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #2c3e50; color: white; z-index: 9999; 
             flex-direction: column; justify-content: center; align-items: center;
         }
-        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(-90deg); } }
         @media screen and (orientation: portrait) { #game-screen { display: none; } #orientation-warning { display: flex; } }
+
+        /* ================= CSS แยกเฉพาะมือถือ (หน้าจอเล็กแนวนอน) ================= */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            
+            /* ดันหลอดเลือดให้ชิดขอบบนมากขึ้น และปรับขนาดตัวหนังสือให้ใหญ่กำลังดี */
+            .hp-container { top: 10px; width: 35vw; min-width: 160px; font-size: 16px; padding: 6px 12px; }
+            .hp-bar-bg { height: 10px; }
+
+            /* ย่อต้นไม้ไม่ให้บังจอ */
+            .tree { width: 10vw; min-width: 60px; bottom: 18%; }
+            
+            /* ล็อกขนาดตัวละครให้ใหญ่พอมองเห็นชัดเจน แต่อย่าใหญ่จนชน UI */
+            .character { width: 100px; bottom: 15%; }
+
+            /* ปรับปุ่มโจมตีให้ใหญ่และกดง่ายขึ้น */
+            #control-panel { bottom: 8px; }
+            button { padding: 10px 20px; font-size: 18px; margin: 0 8px; }
+
+            /* จัดกล่องคณิตศาสตร์ให้ลอยเด่น และปรับช่องพิมพ์ให้จิ้มง่าย */
+            #math-box-wrapper { padding: 10px 20px; border-width: 2px; }
+            #question { font-size: 24px; }
+            #math-box input { font-size: 22px; width: 70px; padding: 4px; }
+            .btn-magic { padding: 8px 16px; font-size: 18px; }
+        }
     </style>
 </head>
 <body>
 
     <div id="orientation-warning">
-        <div style="width: 60px; height: 100px; border: 4px solid white; border-radius: 10px; margin-bottom: 20px; position: relative; animation: rotatePhone 2s infinite ease-in-out;">
+        <div style="width: 60px; height: 100px; border: 4px solid white; border-radius: 10px; margin-bottom: 20px; position: relative;">
             <div style="width: 20px; height: 4px; background: white; position: absolute; bottom: 5px; left: 20px; border-radius: 2px;"></div>
         </div>
         <h2>กรุณาหมุนหน้าจอเป็น "แนวนอน"</h2>
-        <p>เพื่อประสบการณ์การเล่นเกมที่ดีที่สุด</p>
     </div>
 
     <div id="game-screen">
@@ -216,8 +231,8 @@
                 <div id="math-box-wrapper">
                     <div id="math-content">
                         <h2 id="question">10 + 5 = ?</h2>
-                        <input type="number" id="answer-input" placeholder="คำตอบ" autocomplete="off" inputmode="numeric">
-                        <button class="btn-magic" style="padding: 1vh 2vw; font-size: 2vh;" onclick="checkAnswer()">ปล่อยพลัง</button>
+                        <input type="number" id="answer-input" placeholder="ตอบ" autocomplete="off" inputmode="numeric">
+                        <button class="btn-magic" onclick="checkAnswer()">ยิงพลัง</button>
                     </div>
                     <div id="timer-bg"><div id="timer-fill"></div></div>
                 </div>
@@ -233,18 +248,28 @@
     </div>
 
     <script>
-        // ฟังก์ชันปรับขนาดหน้าจอให้พอดีกับมือถือทุกรุ่น
-        function resizeGameScreen() {
+        // --- ระบบล็อกความสูงหน้าจอ ป้องกันคีย์บอร์ดบีบแบน ---
+        let originalHeight = window.innerHeight;
+        
+        function lockGameSize() {
+            // ถ้าย่อจอลงมากกว่า 25% แสดงว่าเป็นฝีมือคีย์บอร์ดเด้งแน่ๆ ให้ข้ามการวาดจอใหม่ไปเลย!
+            if (window.innerHeight < originalHeight * 0.75) {
+                return;
+            }
+            // ถ้าหน้าจอพลิกจริงๆ (เช่น สลับไปมา) ให้อัปเดตความสูงใหม่
+            originalHeight = window.innerHeight;
             const gameScreen = document.getElementById('game-screen');
             gameScreen.style.width = window.innerWidth + 'px';
-            gameScreen.style.height = window.innerHeight + 'px';
+            gameScreen.style.height = originalHeight + 'px';
         }
-        
-        // สั่งให้ทำงานตอนเปิดเกม และทุกครั้งที่มีการพลิก/หมุนหน้าจอ หรือซ่อนแถบ URL
-        window.addEventListener('resize', resizeGameScreen);
-        window.addEventListener('orientationchange', resizeGameScreen);
-        resizeGameScreen(); // เรียกใช้ครั้งแรกทันที
 
+        window.addEventListener('resize', lockGameSize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(lockGameSize, 100); // รอจังหวะหมุนเสร็จนิดนึง
+        });
+        lockGameSize(); // ล็อกขนาดทันทีตอนเปิดเกม
+
+        // --- ระบบเกม ---
         let playerHp = 100;
         let enemyHp = 100;
         let correctAnswer = 0;
@@ -436,9 +461,11 @@
             updateUI();
         }
 
+        // เวลากดปุ่ม Go หรือ Enter ในคีย์บอร์ดมือถือ ให้ยิงพลังทันที
         document.getElementById("answer-input").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
-                event.preventDefault();
+                event.preventDefault(); // ป้องกันการเด้งของจอ
+                this.blur(); // หุบคีย์บอร์ดลงอัตโนมัติ
                 checkAnswer();
             }
         });
