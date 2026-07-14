@@ -10,26 +10,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
 
     <style>
-        /* ================= ส่วนพื้นฐาน (Desktop & รวม) ================= */
-        body { 
+        /* ================= ท่าไม้ตายล็อกจอสำหรับ Safari / LINE ================= */
+        html, body { 
             font-family: 'Itim', cursive, sans-serif; 
             text-align: center; 
-            margin: 0; 
-            padding: 0;
-            overflow: hidden; /* ซ่อนแถบเลื่อน */
+            margin: 0; padding: 0;
+            
+            /* ล็อกตายหน้าจอ ป้องกันการเด้ง ยืด หด ทุกรูปแบบ */
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            
+            overflow: hidden; 
             background-color: #87CEEB; 
-            user-select: none; 
-            -webkit-user-select: none;
-            touch-action: none; /* ห้ามปัดจอเพื่อเลื่อน */
+            user-select: none; -webkit-user-select: none;
+            touch-action: none; 
         }
         
         #game-screen { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100vh;
-            overflow: hidden;
-            /* ป้องกันการโดนบีบแบนเมื่อคีย์บอร์ดเด้ง */
-            min-height: 320px; 
+            width: 100%; height: 100%; position: relative; 
         }
 
         /* ---------------- ฉาก ---------------- */
@@ -37,7 +36,7 @@
         .cloud1 { top: 10%; left: -200px; animation: floatCloud 30s linear infinite; height: 15%; }
         .cloud2 { top: 20%; right: -200px; animation: floatCloudReverse 45s linear infinite; height: 10%; }
         
-        .tree { position: absolute; bottom: 15%; z-index: 2; width: 12vw; min-width: 80px; max-width: 150px;}
+        .tree { position: absolute; bottom: 15%; z-index: 2; width: 12vw; min-width: 70px; max-width: 120px;}
         .tree1 { left: 5%; }
         .tree2 { right: 5%; }
 
@@ -52,7 +51,7 @@
 
         /* ---------------- ตัวละคร ---------------- */
         .character {
-            position: absolute; bottom: 13%; width: 15vw; 
+            position: absolute; bottom: 14%; width: 15vw; 
             min-width: 80px; max-width: 120px; z-index: 4;
             transition: all 0.3s ease;
         }
@@ -62,80 +61,92 @@
         /* แอนิเมชัน */
         @keyframes idleBreathing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .idle-anim { animation: idleBreathing 2s ease-in-out infinite; }
-        
         @keyframes shake {
             0%, 100% { transform: translateX(0) scaleX(-1); }
             25% { transform: translateX(-5px) scaleX(-1); filter: brightness(0.5) red; }
             75% { transform: translateX(5px) scaleX(-1); filter: brightness(0.5) red; }
         }
         .damaged { animation: shake 0.2s 2; }
-        
         @keyframes playerShake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); filter: brightness(0.5) red; }
             75% { transform: translateX(5px); filter: brightness(0.5) red; }
         }
         .player-damaged { animation: playerShake 0.2s 2; }
-
         @keyframes floatCloud { from { left: -200px; } to { left: 110vw; } }
         @keyframes floatCloudReverse { from { right: -200px; } to { right: 110vw; } }
-
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
             100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
         }
         .dmg-text {
             position: absolute; bottom: 35%; z-index: 50;
-            font-size: 40px; color: white; 
+            font-size: 5vh; color: white; 
             text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
             animation: floatUp 1s ease-out forwards; pointer-events: none;
         }
 
-        /* ---------------- UI หลอดเลือด ---------------- */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .hp-container {
-            position: absolute; top: 20px; width: 25vw; min-width: 180px;
-            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 15px; color: white; 
-            font-size: 20px; border: 2px solid rgba(255,255,255,0.2); letter-spacing: 1px;
+        /* ---------------- UI หลอดเลือด (แก้ไขด้วย Flexbox) ---------------- */
+        #ui-layer { 
+            position: absolute; top: max(10px, env(safe-area-inset-top)); left: 0; 
+            width: 100%; padding: 0 max(15px, env(safe-area-inset-right)) 0 max(15px, env(safe-area-inset-left));
+            
+            /* ใช้ Flexbox ดันกล่องซ้ายขวาออกห่างกันอัตโนมัติ ไม่มีทางชนกัน */
+            display: flex; justify-content: space-between; 
+            box-sizing: border-box; z-index: 10; pointer-events: none; 
         }
-        #player-hp-box { left: max(20px, env(safe-area-inset-left)); text-align: left; }
-        #enemy-hp-box { right: max(20px, env(safe-area-inset-right)); text-align: right; }
-        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 2px solid #fff;}
+        .hp-container {
+            flex: 0 1 42%; /* ห้ามกว้างเกิน 42% ของจอ */
+            max-width: 250px;
+            background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 12px; 
+            color: white; font-size: 2.2vh; border: 2px solid rgba(255,255,255,0.2); 
+            box-sizing: border-box;
+        }
+        #player-hp-box { text-align: left; }
+        #enemy-hp-box { text-align: right; }
+        .hp-bar-bg { width: 100%; height: 10px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 2px solid #fff;}
         .hp-bar-fill { height: 100%; background: #28a745; width: 100%; transition: width 0.3s; }
         #enemy-hp-fill { background: #dc3545; }
 
-        /* ---------------- แผงควบคุม (ปุ่มด้านล่าง) ---------------- */
+        /* ---------------- แผงปุ่มกดด้านล่าง ---------------- */
         #control-panel {
-            position: absolute; bottom: 5%; left: 0; width: 100%; 
-            background: transparent; border: none; pointer-events: none; 
+            position: absolute; 
+            /* ดันปุ่มขึ้นมาหลบแถบเมนูด้านล่างของ Safari/LINE */
+            bottom: max(20px, env(safe-area-inset-bottom)); 
+            left: 0; width: 100%; 
             display: flex; justify-content: center; align-items: flex-end; z-index: 20;
-            padding-bottom: env(safe-area-inset-bottom);
+            pointer-events: none; 
         }
-
-        #action-buttons, #math-box-wrapper { pointer-events: auto; }
+        #action-buttons { pointer-events: auto; }
 
         button {
-            padding: 12px 24px; font-size: 20px; font-family: 'Itim', cursive; 
-            border: none; border-radius: 50px;
-            cursor: pointer; margin: 0 10px; transition: 0.1s; 
+            padding: 1.5vh 4vw; font-size: 2.5vh; font-family: 'Itim', cursive; 
+            border: none; border-radius: 50px; cursor: pointer; margin: 0 10px; 
             box-shadow: 0 5px #999; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
         button:active { box-shadow: 0 2px #666; transform: translateY(3px); }
         .btn-attack { background-color: #ff9800; color: white; box-shadow: 0 5px #c57600; }
         .btn-magic { background-color: #9c27b0; color: white; box-shadow: 0 5px #6d1b7b; }
 
-        /* ---------------- กล่องคณิตศาสตร์ ---------------- */
-        #math-box { display: none; text-align: center; width: 100%; justify-content: center; pointer-events: auto; }
+        /* ---------------- กล่องคณิตศาสตร์ (ย้ายมาลอยตรงกลางจอ) ---------------- */
+        #math-box { 
+            display: none; position: absolute; 
+            /* ให้อยู่สูงกว่ากึ่งกลางนิดนึง หลบคีย์บอร์ดมือถือ */
+            top: 40%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 30; pointer-events: auto; 
+            width: 80%; max-width: 400px;
+        }
         #math-box-wrapper {
             background: rgba(255, 255, 255, 0.95);
             padding: 15px 25px; border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 3px solid #9c27b0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 4px solid #9c27b0;
+            display: flex; flex-direction: column; align-items: center;
         }
-        #math-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        #question { font-size: 28px; margin: 0; color: #333; letter-spacing: 2px; }
+        #math-content { display: flex; justify-content: center; align-items: center; gap: 15px; width: 100%; }
+        #question { font-size: 3.5vh; margin: 0; color: #333; font-weight: bold; }
         #math-box input { 
-            font-family: 'Itim', cursive; font-size: 24px; width: 80px; text-align: center; padding: 5px; 
-            border: 2px solid #ccc; border-radius: 8px; outline: none; 
+            font-family: 'Itim', cursive; font-size: 3vh; width: 70px; text-align: center; padding: 5px; 
+            border: 2px solid #ccc; border-radius: 8px; outline: none; font-weight: bold;
         }
         #timer-bg { width: 100%; height: 8px; background: #ddd; border-radius: 5px; margin-top: 15px; overflow: hidden; }
         #timer-fill { height: 100%; background: #ff4444; width: 100%; }
@@ -149,12 +160,12 @@
         }
         .modal-card {
             background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            padding: 40px; border-radius: 25px; border: 4px solid #fff; text-align: center;
+            padding: 30px; border-radius: 25px; border: 4px solid #fff; text-align: center;
         }
-        #game-over-title { color: white; font-size: 40px; margin-top: 0; margin-bottom: 30px; }
+        #game-over-title { color: white; font-size: 5vh; margin-top: 0; margin-bottom: 20px; }
         .btn-restart { 
             background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); 
-            color: #000; font-size: 24px; padding: 15px 30px; border: 3px solid #fff; 
+            color: #000; font-size: 2.5vh; padding: 10px 20px; border: 3px solid #fff; 
         }
 
         /* ---------------- ระบบเตือนแนวตั้ง ---------------- */
@@ -164,30 +175,6 @@
             flex-direction: column; justify-content: center; align-items: center;
         }
         @media screen and (orientation: portrait) { #game-screen { display: none; } #orientation-warning { display: flex; } }
-
-        /* ================= CSS แยกเฉพาะมือถือ (หน้าจอเล็กแนวนอน) ================= */
-        @media screen and (max-height: 500px) and (orientation: landscape) {
-            
-            /* ดันหลอดเลือดให้ชิดขอบบนมากขึ้น และปรับขนาดตัวหนังสือให้ใหญ่กำลังดี */
-            .hp-container { top: 10px; width: 35vw; min-width: 160px; font-size: 16px; padding: 6px 12px; }
-            .hp-bar-bg { height: 10px; }
-
-            /* ย่อต้นไม้ไม่ให้บังจอ */
-            .tree { width: 10vw; min-width: 60px; bottom: 18%; }
-            
-            /* ล็อกขนาดตัวละครให้ใหญ่พอมองเห็นชัดเจน แต่อย่าใหญ่จนชน UI */
-            .character { width: 100px; bottom: 15%; }
-
-            /* ปรับปุ่มโจมตีให้ใหญ่และกดง่ายขึ้น */
-            #control-panel { bottom: 8px; }
-            button { padding: 10px 20px; font-size: 18px; margin: 0 8px; }
-
-            /* จัดกล่องคณิตศาสตร์ให้ลอยเด่น และปรับช่องพิมพ์ให้จิ้มง่าย */
-            #math-box-wrapper { padding: 10px 20px; border-width: 2px; }
-            #question { font-size: 24px; }
-            #math-box input { font-size: 22px; width: 70px; padding: 4px; }
-            .btn-magic { padding: 8px 16px; font-size: 18px; }
-        }
     </style>
 </head>
 <body>
@@ -221,21 +208,21 @@
             </div>
         </div>
 
+        <div id="math-box">
+            <div id="math-box-wrapper">
+                <div id="math-content">
+                    <h2 id="question">10 + 5 = ?</h2>
+                    <input type="number" id="answer-input" placeholder="ตอบ" autocomplete="off" inputmode="numeric">
+                    <button class="btn-magic" style="padding: 1vh 2vw; font-size: 2.2vh;" onclick="checkAnswer()">ยิงพลัง</button>
+                </div>
+                <div id="timer-bg"><div id="timer-fill"></div></div>
+            </div>
+        </div>
+
         <div id="control-panel">
             <div id="action-buttons">
                 <button class="btn-attack" onclick="normalAttack()">⚔️ โจมตี</button>
                 <button class="btn-magic" onclick="openMathMagic()">✨ ร่ายเวทคณิต</button>
-            </div>
-            
-            <div id="math-box">
-                <div id="math-box-wrapper">
-                    <div id="math-content">
-                        <h2 id="question">10 + 5 = ?</h2>
-                        <input type="number" id="answer-input" placeholder="ตอบ" autocomplete="off" inputmode="numeric">
-                        <button class="btn-magic" onclick="checkAnswer()">ยิงพลัง</button>
-                    </div>
-                    <div id="timer-bg"><div id="timer-fill"></div></div>
-                </div>
             </div>
         </div>
 
@@ -248,28 +235,7 @@
     </div>
 
     <script>
-        // --- ระบบล็อกความสูงหน้าจอ ป้องกันคีย์บอร์ดบีบแบน ---
-        let originalHeight = window.innerHeight;
-        
-        function lockGameSize() {
-            // ถ้าย่อจอลงมากกว่า 25% แสดงว่าเป็นฝีมือคีย์บอร์ดเด้งแน่ๆ ให้ข้ามการวาดจอใหม่ไปเลย!
-            if (window.innerHeight < originalHeight * 0.75) {
-                return;
-            }
-            // ถ้าหน้าจอพลิกจริงๆ (เช่น สลับไปมา) ให้อัปเดตความสูงใหม่
-            originalHeight = window.innerHeight;
-            const gameScreen = document.getElementById('game-screen');
-            gameScreen.style.width = window.innerWidth + 'px';
-            gameScreen.style.height = originalHeight + 'px';
-        }
-
-        window.addEventListener('resize', lockGameSize);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(lockGameSize, 100); // รอจังหวะหมุนเสร็จนิดนึง
-        });
-        lockGameSize(); // ล็อกขนาดทันทีตอนเปิดเกม
-
-        // --- ระบบเกม ---
+        // เคลียร์โค้ดปรับขนาดหน้าจอด้วย JS ทิ้งไป เพราะเราใช้ CSS บังคับตายตัวแล้ว (เสถียรกว่า)
         let playerHp = 100;
         let enemyHp = 100;
         let correctAnswer = 0;
@@ -361,7 +327,7 @@
             if (!isPlayerTurn || playerHp <= 0 || enemyHp <= 0) return;
             
             document.getElementById('action-buttons').style.display = 'none';
-            document.getElementById('math-box').style.display = 'flex';
+            document.getElementById('math-box').style.display = 'block';
             
             let isPlus = Math.random() > 0.5;
             let num1 = Math.floor(Math.random() * 20) + 10;
@@ -461,11 +427,11 @@
             updateUI();
         }
 
-        // เวลากดปุ่ม Go หรือ Enter ในคีย์บอร์ดมือถือ ให้ยิงพลังทันที
+        // ป้องกันอาการหน้าจอเด้งเวลาพิมพ์คำตอบเสร็จแล้วกด Enter (สำคัญมากสำหรับมือถือ)
         document.getElementById("answer-input").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
-                event.preventDefault(); // ป้องกันการเด้งของจอ
-                this.blur(); // หุบคีย์บอร์ดลงอัตโนมัติ
+                event.preventDefault(); 
+                this.blur(); // สั่งให้หุบคีย์บอร์ดลงทันที
                 checkAnswer();
             }
         });
