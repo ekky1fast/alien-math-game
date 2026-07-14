@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alien Math Battle - Final Version</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
+
+    <style>
+        body { 
+            font-family: 'Itim', cursive, sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #87CEEB; 
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+        
+        #game-screen { width: 100vw; height: 100vh; position: relative; }
+
+        /* ---------------- ฉาก ---------------- */
+        .cloud { position: absolute; opacity: 0.8; z-index: 1; }
+        .cloud1 { top: 10%; left: -200px; animation: floatCloud 30s linear infinite; height: 15vh; }
+        .cloud2 { top: 20%; right: -200px; animation: floatCloudReverse 45s linear infinite; height: 10vh; }
+        
+        .tree { position: absolute; bottom: 15vh; z-index: 2; width: 12vw; min-width: 80px; max-width: 150px;}
+        .tree1 { left: 5%; }
+        .tree2 { right: 5%; }
+
+        #ground {
+            position: absolute; bottom: 5vh; width: 100%; height: 10vh;
+            background-image: url('grass1.png'); background-repeat: repeat-x; z-index: 3; background-size: contain;
+        }
+        #underground {
+            position: absolute; bottom: 0; width: 100%; height: 5vh;
+            background-image: url('bg_wood.png'); background-repeat: repeat; z-index: 3;
+        }
+
+        /* ---------------- ตัวละคร ---------------- */
+        .character {
+            position: absolute; bottom: 14vh; width: 15vw; 
+            min-width: 70px; max-width: 120px; z-index: 4;
+            transition: all 0.3s ease;
+        }
+        #player { left: 15%; }
+        /* ศัตรูหันหน้ากลับด้าน แต่เอาตัวเปลี่ยนสีออกแล้ว */
+        #enemy { right: 15%; transform: scaleX(-1); }
+
+        /* แอนิเมชันตัวละคร */
+        @keyframes idleBreathing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .idle-anim { animation: idleBreathing 2s ease-in-out infinite; }
+        
+        /* เอา hue-rotate ออกจากแอนิเมชันโดนตี */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) scaleX(-1); }
+            25% { transform: translateX(-5px) scaleX(-1); filter: brightness(0.5) red; }
+            75% { transform: translateX(5px) scaleX(-1); filter: brightness(0.5) red; }
+        }
+        .damaged { animation: shake 0.2s 2; }
+        
+        @keyframes playerShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); filter: brightness(0.5) red; }
+            75% { transform: translateX(5px); filter: brightness(0.5) red; }
+        }
+        .player-damaged { animation: playerShake 0.2s 2; }
+
+        @keyframes floatCloud { from { left: -200px; } to { left: 110vw; } }
+        @keyframes floatCloudReverse { from { right: -200px; } to { right: 110vw; } }
+
+        /* ดาเมจลอยขึ้น */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
+        }
+        .dmg-text {
+            position: absolute; bottom: 35vh; z-index: 50;
+            font-size: 6vh; color: white; 
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            animation: floatUp 1s ease-out forwards; pointer-events: none;
+        }
+
+        /* ---------------- UI หลอดเลือด ---------------- */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .hp-container {
+            position: absolute; top: 15px; width: 28vw; min-width: 120px;
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 15px; color: white; 
+            font-size: 2.5vh; border: 2px solid rgba(255,255,255,0.2); letter-spacing: 1px;
+        }
+        #player-hp-box { left: 15px; text-align: left; }
+        #enemy-hp-box { right: 15px; text-align: right; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 2px solid #fff;}
+        .hp-bar-fill { height: 100%; background: #28a745; width: 100%; transition: width 0.3s; }
+        #enemy-hp-fill { background: #dc3545; }
+
+        /* ---------------- แผงควบคุม ---------------- */
+        #control-panel {
+            position: absolute; bottom: 3vh; left: 0; width: 100%; 
+            background: transparent; border: none; pointer-events: none; 
+            display: flex; justify-content: center; align-items: flex-end; z-index: 20;
+        }
+
+        #action-buttons, #math-box-wrapper { pointer-events: auto; }
+
+        button {
+            padding: 1.5vh 3vw; font-size: 2.2vh; font-family: 'Itim', cursive; 
+            border: none; border-radius: 50px;
+            cursor: pointer; margin: 0 10px; transition: 0.1s; 
+            box-shadow: 0 5px #999; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        button:active { box-shadow: 0 2px #666; transform: translateY(3px); }
+        .btn-attack { background-color: #ff9800; color: white; box-shadow: 0 5px #c57600; }
+        .btn-magic { background-color: #9c27b0; color: white; box-shadow: 0 5px #6d1b7b; }
+
+        /* กล่องตอบคำถาม & หลอดเวลา */
+        #math-box { display: none; text-align: center; width: 100%; justify-content: center; pointer-events: auto; }
+        #math-box-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border: 3px solid #9c27b0;
+        }
+        #math-content { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        #question { font-size: 3.5vh; margin: 0; color: #333; letter-spacing: 2px; }
+        #math-box input { 
+            font-family: 'Itim', cursive; font-size: 3vh; width: 70px; text-align: center; padding: 5px; 
+            border: 2px solid #ccc; border-radius: 8px; outline: none; 
+        }
+        #timer-bg { width: 100%; height: 6px; background: #ddd; border-radius: 5px; margin-top: 15px; overflow: hidden; }
+        #timer-fill { height: 100%; background: #ff4444; width: 100%; }
+
+        /* ---------------- เมนูจบเกม ---------------- */
+        #game-over-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: none; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 100; pointer-events: auto;
+            backdrop-filter: blur(3px);
+        }
+        .modal-card {
+            background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+            padding: 40px; border-radius: 25px; border: 4px solid #fff;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        #game-over-title { color: white; font-size: 6vh; margin-top: 0; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .btn-restart { 
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); 
+            color: #000; font-size: 3vh; padding: 15px 30px; 
+            border: 3px solid #fff; box-shadow: 0 5px #00a4ad, 0 10px 20px rgba(0,0,0,0.3); 
+        }
+        .btn-restart:active { box-shadow: 0 2px #00a4ad; transform: translateY(3px); }
+
+        /* ---------------- ระบบบังคับแนวนอน ---------------- */
+        #orientation-warning {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; color: white; z-index: 9999; 
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(-90deg); } }
+        @media screen and (orientation: portrait) { #game-screen { display: none; } #orientation-warning { display: flex; } }
+    </style>
+</head>
+<body>
+
+    <div id="orientation-warning">
+        <div style="width: 60px; height: 100px; border: 4px solid white; border-radius: 10px; margin-bottom: 20px; position: relative; animation: rotatePhone 2s infinite ease-in-out;">
+            <div style="width: 20px; height: 4px; background: white; position: absolute; bottom: 5px; left: 20px; border-radius: 2px;"></div>
+        </div>
+        <h2>กรุณาหมุนหน้าจอเป็น "แนวนอน"</h2>
+        <p>เพื่อประสบการณ์การเล่นเกมที่ดีที่สุด</p>
+    </div>
+
+    <div id="game-screen">
+        <img src="cloud1.png" class="cloud cloud1">
+        <img src="cloud2.png" class="cloud cloud2">
+        <img src="tree_oak.png" class="tree tree1">
+        <img src="tree_pine.png" class="tree tree2">
+        <div id="ground"></div>
+        <div id="underground"></div>
+
+        <img id="player" class="character idle-anim" src="character_green_idle.png">
+        <img id="enemy" class="character idle-anim" src="character_purple_idle.png">
+
+        <div id="ui-layer">
+            <div class="hp-container" id="player-hp-box">
+                ฮีโร่ HP: <span id="player-hp-text">100</span>
+                <div class="hp-bar-bg"><div id="player-hp-fill" class="hp-bar-fill"></div></div>
+            </div>
+            <div class="hp-container" id="enemy-hp-box">
+                ศัตรู HP: <span id="enemy-hp-text">100</span>
+                <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill"></div></div>
+            </div>
+        </div>
+
+        <div id="control-panel">
+            <div id="action-buttons">
+                <button class="btn-attack" onclick="normalAttack()">⚔️ โจมตี</button>
+                <button class="btn-magic" onclick="openMathMagic()">✨ ร่ายเวทคณิต</button>
+            </div>
+            
+            <div id="math-box">
+                <div id="math-box-wrapper">
+                    <div id="math-content">
+                        <h2 id="question">10 + 5 = ?</h2>
+                        <input type="number" id="answer-input" placeholder="คำตอบ" autocomplete="off" inputmode="numeric">
+                        <button class="btn-magic" style="padding: 1vh 2vw; font-size: 2vh;" onclick="checkAnswer()">ปล่อยพลัง</button>
+                    </div>
+                    <div id="timer-bg"><div id="timer-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-over-menu">
+            <div class="modal-card">
+                <h1 id="game-over-title">คุณชนะแล้ว!</h1>
+                <button class="btn-restart" onclick="restartGame()">🔄 เล่นใหม่อีกครั้ง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let playerHp = 100;
+        let enemyHp = 100;
+        let correctAnswer = 0;
+        let isPlayerTurn = true;
+        let countdownTimer;
+
+        const playerImg = document.getElementById('player');
+        const enemyImg = document.getElementById('enemy');
+
+        const attackSound = new Audio('laserLarge_003.ogg');
+
+        function updateUI() {
+            document.getElementById('player-hp-text').innerText = Math.max(0, playerHp);
+            document.getElementById('enemy-hp-text').innerText = Math.max(0, enemyHp);
+            document.getElementById('player-hp-fill').style.width = Math.max(0, playerHp) + '%';
+            document.getElementById('enemy-hp-fill').style.width = Math.max(0, enemyHp) + '%';
+
+            if (enemyHp <= 0) setTimeout(() => showGameOver(true), 800);
+            else if (playerHp <= 0) setTimeout(() => showGameOver(false), 800);
+        }
+
+        function showFloatingDamage(targetId, damage, color) {
+            let floatEl = document.createElement('div');
+            floatEl.innerText = "-" + damage;
+            floatEl.className = 'dmg-text';
+            floatEl.style.color = color;
+            floatEl.style.left = targetId === 'player' ? '18%' : 'auto';
+            floatEl.style.right = targetId === 'enemy' ? '18%' : 'auto';
+            document.getElementById('game-screen').appendChild(floatEl);
+            setTimeout(() => floatEl.remove(), 1000);
+        }
+
+        function playAttackAnimation(attacker, target, damage, callback) {
+            // เช็กว่าตัวที่กำลังโจมตีคือฝั่งไหน เพื่อดึงสีรูปภาพให้ถูกต้อง
+            let colorPrefix = attacker.id === 'player' ? 'green' : 'purple';
+            
+            attacker.src = `character_${colorPrefix}_jump.png`;
+            attacker.classList.remove('idle-anim');
+            
+            if(attacker.id === 'player') attacker.style.left = "40%"; 
+            else attacker.style.right = "40%"; 
+
+            setTimeout(() => {
+                attacker.src = `character_${colorPrefix}_walk_a.png`;
+                
+                attackSound.cloneNode(true).play();
+                
+                if(target.id === 'enemy') {
+                    // เปลี่ยนรูปศัตรูตอนโดนตี (ใช้รูป _hit.png)
+                    target.src = "character_purple_hit.png";
+                    target.classList.add('damaged');
+                    showFloatingDamage('enemy', damage, '#ffeb3b'); 
+                } else {
+                    target.classList.add('player-damaged');
+                    showFloatingDamage('player', damage, '#ff5252'); 
+                }
+                updateUI();
+                
+                setTimeout(() => {
+                    attacker.style.left = attacker.id === 'player' ? "15%" : "";
+                    attacker.style.right = attacker.id === 'enemy' ? "15%" : "";
+                    
+                    // เปลี่ยนรูปกลับเป็นท่ายืนปกติตามสี
+                    attacker.src = `character_${colorPrefix}_idle.png`;
+                    attacker.classList.add('idle-anim');
+                    
+                    if(target.id === 'enemy') {
+                        target.src = "character_purple_idle.png";
+                    }
+                    target.classList.remove('damaged');
+                    target.classList.remove('player-damaged');
+                    
+                    if(callback) setTimeout(callback, 500);
+                }, 400);
+            }, 300);
+        }
+
+        function normalAttack() {
+            if (!isPlayerTurn || playerHp <= 0 || enemyHp <= 0) return;
+            isPlayerTurn = false;
+            
+            let dmg = Math.floor(Math.random() * 5) + 5; 
+            enemyHp -= dmg;
+            playAttackAnimation(playerImg, enemyImg, dmg, enemyTurn);
+        }
+
+        function enemyTurn() {
+            if (enemyHp <= 0 || playerHp <= 0) return;
+            
+            setTimeout(() => {
+                let dmg = Math.floor(Math.random() * 10) + 5; 
+                playerHp -= dmg;
+                playAttackAnimation(enemyImg, playerImg, dmg, () => {
+                    isPlayerTurn = true;
+                });
+            }, 1000);
+        }
+
+        function openMathMagic() {
+            if (!isPlayerTurn || playerHp <= 0 || enemyHp <= 0) return;
+            
+            document.getElementById('action-buttons').style.display = 'none';
+            document.getElementById('math-box').style.display = 'flex';
+            
+            let isPlus = Math.random() > 0.5;
+            let num1 = Math.floor(Math.random() * 20) + 10;
+            let num2 = Math.floor(Math.random() * 10) + 1;
+            
+            if (isPlus) {
+                correctAnswer = num1 + num2;
+                document.getElementById('question').innerText = num1 + " + " + num2 + " = ?";
+            } else {
+                correctAnswer = num1 - num2;
+                document.getElementById('question').innerText = num1 + " - " + num2 + " = ?";
+            }
+            
+            let inputField = document.getElementById('answer-input');
+            inputField.value = '';
+            inputField.focus();
+
+            let timerFill = document.getElementById('timer-fill');
+            timerFill.style.transition = 'none';
+            timerFill.style.width = '100%';
+            
+            setTimeout(() => {
+                timerFill.style.transition = 'width 7s linear';
+                timerFill.style.width = '0%';
+            }, 50);
+
+            clearTimeout(countdownTimer);
+            countdownTimer = setTimeout(() => {
+                magicFailed();
+            }, 7000);
+        }
+
+        function checkAnswer() {
+            let userAns = parseInt(document.getElementById('answer-input').value);
+            if (isNaN(userAns)) return; 
+
+            clearTimeout(countdownTimer); 
+
+            document.getElementById('math-box').style.display = 'none';
+            document.getElementById('action-buttons').style.display = 'block';
+            isPlayerTurn = false;
+
+            if (userAns === correctAnswer) {
+                let dmg = Math.floor(Math.random() * 15) + 20; 
+                enemyHp -= dmg;
+                
+                playerImg.src = "character_green_walk_b.png"; 
+                
+                setTimeout(() => {
+                    attackSound.cloneNode(true).play();
+
+                    enemyImg.src = "character_purple_hit.png";
+                    enemyImg.classList.add('damaged');
+                    showFloatingDamage('enemy', dmg, '#18ffff'); 
+                    updateUI();
+                    
+                    playerImg.src = "character_green_idle.png";
+                    
+                    setTimeout(() => {
+                        enemyImg.src = "character_purple_idle.png";
+                        enemyImg.classList.remove('damaged');
+                        enemyTurn();
+                    }, 600);
+                }, 500);
+
+            } else {
+                magicFailed();
+            }
+        }
+
+        function magicFailed() {
+            document.getElementById('math-box').style.display = 'none';
+            document.getElementById('action-buttons').style.display = 'block';
+            isPlayerTurn = false;
+
+            playerHp -= 10;
+            playerImg.classList.add('player-damaged');
+            showFloatingDamage('player', 10, '#ff5252');
+            
+            attackSound.cloneNode(true).play();
+            updateUI();
+            
+            setTimeout(() => {
+                playerImg.classList.remove('player-damaged');
+                enemyTurn();
+            }, 600);
+        }
+
+        function showGameOver(isWin) {
+            let menu = document.getElementById('game-over-menu');
+            let title = document.getElementById('game-over-title');
+            title.innerText = isWin ? "🎉 ชนะแล้ว ยอดเยี่ยม!" : "💀 พ่ายแพ้ ลองใหม่นะ!";
+            title.style.color = isWin ? "#fff" : "#ffcccc";
+            menu.style.display = 'flex';
+        }
+
+        function restartGame() {
+            playerHp = 100;
+            enemyHp = 100;
+            isPlayerTurn = true;
+            document.getElementById('game-over-menu').style.display = 'none';
+            playerImg.src = "character_green_idle.png";
+            enemyImg.src = "character_purple_idle.png";
+            updateUI();
+        }
+
+        document.getElementById("answer-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
