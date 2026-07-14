@@ -2,21 +2,27 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <!-- บังคับเต็มจอ เคลียร์รอยบาก และห้ามซูมเด็ดขาด -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Alien Math Battle - Final Version</title>
+    <title>Alien Math Battle - Masterpiece</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
 
     <style>
-        /* ================= ท่าไม้ตายล็อกจอสำหรับ Safari / LINE ================= */
+        /* ================= ท่าไม้ตายล็อกจอ ไม่ให้ Safari/LINE ยืดหด ================= */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* เอาแสงสีฟ้าตอนกดปุ่มในมือถือออก */
+        }
+
         html, body { 
             font-family: 'Itim', cursive, sans-serif; 
             text-align: center; 
             margin: 0; padding: 0;
             
-            /* ล็อกตายหน้าจอ ป้องกันการเด้ง ยืด หด ทุกรูปแบบ */
+            /* หัวใจสำคัญ: ล็อกตายหน้าเว็บให้ติดขอบจอ 100% เสมอ */
             position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0;
             width: 100%; height: 100%;
@@ -24,131 +30,136 @@
             overflow: hidden; 
             background-color: #87CEEB; 
             user-select: none; -webkit-user-select: none;
-            touch-action: none; 
+            touch-action: none; /* ห้ามปัดเพื่อเลื่อนหน้าจอ */
         }
         
         #game-screen { 
-            width: 100%; height: 100%; position: relative; 
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%; 
+            overflow: hidden;
         }
 
-        /* ---------------- ฉาก ---------------- */
+        /* ---------------- ฉาก (ใช้เปอร์เซ็นต์ทั้งหมด) ---------------- */
         .cloud { position: absolute; opacity: 0.8; z-index: 1; }
-        .cloud1 { top: 10%; left: -200px; animation: floatCloud 30s linear infinite; height: 15%; }
-        .cloud2 { top: 20%; right: -200px; animation: floatCloudReverse 45s linear infinite; height: 10%; }
+        .cloud1 { top: 10%; left: -20%; animation: floatCloud 30s linear infinite; height: 15%; }
+        .cloud2 { top: 20%; right: -20%; animation: floatCloudReverse 45s linear infinite; height: 10%; }
         
-        .tree { position: absolute; bottom: 15%; z-index: 2; width: 12vw; min-width: 70px; max-width: 120px;}
+        .tree { position: absolute; bottom: 15%; z-index: 2; width: 12%; min-width: 60px; max-width: 120px;}
         .tree1 { left: 5%; }
         .tree2 { right: 5%; }
 
         #ground {
-            position: absolute; bottom: 5%; width: 100%; height: 10%;
-            background-image: url('grass1.png'); background-repeat: repeat-x; z-index: 3; background-size: contain;
+            position: absolute; bottom: 5%; left: 0; width: 100%; height: 12%;
+            background-image: url('grass1.png'); background-repeat: repeat-x; z-index: 3; background-size: auto 100%;
         }
         #underground {
-            position: absolute; bottom: 0; width: 100%; height: 5%;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 5%;
             background-image: url('bg_wood.png'); background-repeat: repeat; z-index: 3;
         }
 
         /* ---------------- ตัวละคร ---------------- */
         .character {
-            position: absolute; bottom: 14%; width: 15vw; 
-            min-width: 80px; max-width: 120px; z-index: 4;
+            position: absolute; bottom: 16%; width: 15%; 
+            min-width: 70px; max-width: 130px; z-index: 4;
             transition: all 0.3s ease;
         }
-        #player { left: 15%; }
-        #enemy { right: 15%; transform: scaleX(-1); }
+        #player { left: 10%; }
+        #enemy { right: 10%; transform: scaleX(-1); }
 
         /* แอนิเมชัน */
         @keyframes idleBreathing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .idle-anim { animation: idleBreathing 2s ease-in-out infinite; }
+        
         @keyframes shake {
             0%, 100% { transform: translateX(0) scaleX(-1); }
             25% { transform: translateX(-5px) scaleX(-1); filter: brightness(0.5) red; }
             75% { transform: translateX(5px) scaleX(-1); filter: brightness(0.5) red; }
         }
         .damaged { animation: shake 0.2s 2; }
+        
         @keyframes playerShake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); filter: brightness(0.5) red; }
             75% { transform: translateX(5px); filter: brightness(0.5) red; }
         }
         .player-damaged { animation: playerShake 0.2s 2; }
-        @keyframes floatCloud { from { left: -200px; } to { left: 110vw; } }
-        @keyframes floatCloudReverse { from { right: -200px; } to { right: 110vw; } }
+
+        @keyframes floatCloud { from { left: -30%; } to { left: 120%; } }
+        @keyframes floatCloudReverse { from { right: -30%; } to { right: 120%; } }
+
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
             100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
         }
         .dmg-text {
             position: absolute; bottom: 35%; z-index: 50;
-            font-size: 5vh; color: white; 
+            font-size: 30px; color: white; 
             text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
             animation: floatUp 1s ease-out forwards; pointer-events: none;
         }
 
-        /* ---------------- UI หลอดเลือด (แก้ไขด้วย Flexbox) ---------------- */
+        /* ---------------- UI หลอดเลือด ---------------- */
         #ui-layer { 
             position: absolute; top: max(10px, env(safe-area-inset-top)); left: 0; 
-            width: 100%; padding: 0 max(15px, env(safe-area-inset-right)) 0 max(15px, env(safe-area-inset-left));
-            
-            /* ใช้ Flexbox ดันกล่องซ้ายขวาออกห่างกันอัตโนมัติ ไม่มีทางชนกัน */
-            display: flex; justify-content: space-between; 
-            box-sizing: border-box; z-index: 10; pointer-events: none; 
+            width: 100%; height: 100%; pointer-events: none; z-index: 10; 
         }
         .hp-container {
-            flex: 0 1 42%; /* ห้ามกว้างเกิน 42% ของจอ */
-            max-width: 250px;
-            background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 12px; 
-            color: white; font-size: 2.2vh; border: 2px solid rgba(255,255,255,0.2); 
-            box-sizing: border-box;
+            position: absolute; top: 10px; width: 35%; max-width: 200px;
+            background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 10px; 
+            color: white; font-size: 14px; border: 2px solid rgba(255,255,255,0.2); 
+            letter-spacing: 1px;
         }
-        #player-hp-box { text-align: left; }
-        #enemy-hp-box { text-align: right; }
-        .hp-bar-bg { width: 100%; height: 10px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 2px solid #fff;}
+        /* บังคับเกาะซ้าย-ขวา ไม่มีทางชนกันแน่นอน */
+        #player-hp-box { left: max(2%, env(safe-area-inset-left)); text-align: left; }
+        #enemy-hp-box { right: max(2%, env(safe-area-inset-right)); text-align: right; }
+        
+        .hp-bar-bg { width: 100%; height: 10px; background: #333; border-radius: 5px; margin-top: 5px; overflow: hidden; border: 1px solid #fff;}
         .hp-bar-fill { height: 100%; background: #28a745; width: 100%; transition: width 0.3s; }
         #enemy-hp-fill { background: #dc3545; }
 
-        /* ---------------- แผงปุ่มกดด้านล่าง ---------------- */
+        /* ---------------- แผงปุ่มกด ---------------- */
         #control-panel {
             position: absolute; 
-            /* ดันปุ่มขึ้นมาหลบแถบเมนูด้านล่างของ Safari/LINE */
-            bottom: max(20px, env(safe-area-inset-bottom)); 
+            bottom: max(6%, env(safe-area-inset-bottom)); /* ดันขึ้นมาหลบขอบจอล่าง */
             left: 0; width: 100%; 
-            display: flex; justify-content: center; align-items: flex-end; z-index: 20;
+            display: flex; justify-content: center; z-index: 20;
             pointer-events: none; 
         }
+
         #action-buttons { pointer-events: auto; }
 
         button {
-            padding: 1.5vh 4vw; font-size: 2.5vh; font-family: 'Itim', cursive; 
-            border: none; border-radius: 50px; cursor: pointer; margin: 0 10px; 
-            box-shadow: 0 5px #999; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            padding: 8px 16px; font-size: 16px; font-family: 'Itim', cursive; 
+            border: none; border-radius: 20px; cursor: pointer; margin: 0 5px; transition: 0.1s; 
+            box-shadow: 0 4px #999;
         }
-        button:active { box-shadow: 0 2px #666; transform: translateY(3px); }
-        .btn-attack { background-color: #ff9800; color: white; box-shadow: 0 5px #c57600; }
-        .btn-magic { background-color: #9c27b0; color: white; box-shadow: 0 5px #6d1b7b; }
+        button:active { box-shadow: 0 1px #666; transform: translateY(3px); }
+        .btn-attack { background-color: #ff9800; color: white; box-shadow: 0 4px #c57600; }
+        .btn-attack:active { box-shadow: 0 1px #c57600; }
+        .btn-magic { background-color: #9c27b0; color: white; box-shadow: 0 4px #6d1b7b; }
+        .btn-magic:active { box-shadow: 0 1px #6d1b7b; }
 
-        /* ---------------- กล่องคณิตศาสตร์ (ย้ายมาลอยตรงกลางจอ) ---------------- */
+        /* ---------------- กล่องคณิตศาสตร์ ---------------- */
         #math-box { 
             display: none; position: absolute; 
-            /* ให้อยู่สูงกว่ากึ่งกลางนิดนึง หลบคีย์บอร์ดมือถือ */
-            top: 40%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 30; pointer-events: auto; 
-            width: 80%; max-width: 400px;
+            top: 40%; left: 50%; transform: translate(-50%, -50%); /* ไว้กลางจอหลบคีย์บอร์ด */
+            z-index: 30; pointer-events: auto; width: 85%; max-width: 320px;
         }
         #math-box-wrapper {
             background: rgba(255, 255, 255, 0.95);
-            padding: 15px 25px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 4px solid #9c27b0;
-            display: flex; flex-direction: column; align-items: center;
+            padding: 10px 15px; border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 3px solid #9c27b0;
         }
-        #math-content { display: flex; justify-content: center; align-items: center; gap: 15px; width: 100%; }
-        #question { font-size: 3.5vh; margin: 0; color: #333; font-weight: bold; }
+        #math-content { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;}
+        #question { font-size: 20px; margin: 0; color: #333; font-weight: bold; }
+        
         #math-box input { 
-            font-family: 'Itim', cursive; font-size: 3vh; width: 70px; text-align: center; padding: 5px; 
-            border: 2px solid #ccc; border-radius: 8px; outline: none; font-weight: bold;
+            font-family: 'Itim', cursive; font-size: 18px; width: 60px; text-align: center; 
+            padding: 5px; border: 2px solid #ccc; border-radius: 8px; outline: none; font-weight: bold;
+            -webkit-appearance: none; /* แก้บัคสไตล์แปลกๆ ใน iOS */
         }
-        #timer-bg { width: 100%; height: 8px; background: #ddd; border-radius: 5px; margin-top: 15px; overflow: hidden; }
+        #timer-bg { width: 100%; height: 6px; background: #ddd; border-radius: 5px; margin-top: 10px; overflow: hidden; }
         #timer-fill { height: 100%; background: #ff4444; width: 100%; }
 
         /* ---------------- เมนูจบเกม ---------------- */
@@ -160,12 +171,12 @@
         }
         .modal-card {
             background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-            padding: 30px; border-radius: 25px; border: 4px solid #fff; text-align: center;
+            padding: 20px 30px; border-radius: 20px; border: 3px solid #fff; text-align: center;
         }
-        #game-over-title { color: white; font-size: 5vh; margin-top: 0; margin-bottom: 20px; }
+        #game-over-title { color: white; font-size: 32px; margin-top: 0; margin-bottom: 15px; }
         .btn-restart { 
             background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); 
-            color: #000; font-size: 2.5vh; padding: 10px 20px; border: 3px solid #fff; 
+            color: #000; font-size: 18px; padding: 10px 20px; border: 3px solid #fff; 
         }
 
         /* ---------------- ระบบเตือนแนวตั้ง ---------------- */
@@ -175,15 +186,16 @@
             flex-direction: column; justify-content: center; align-items: center;
         }
         @media screen and (orientation: portrait) { #game-screen { display: none; } #orientation-warning { display: flex; } }
+
     </style>
 </head>
 <body>
 
     <div id="orientation-warning">
-        <div style="width: 60px; height: 100px; border: 4px solid white; border-radius: 10px; margin-bottom: 20px; position: relative;">
-            <div style="width: 20px; height: 4px; background: white; position: absolute; bottom: 5px; left: 20px; border-radius: 2px;"></div>
+        <div style="width: 50px; height: 80px; border: 3px solid white; border-radius: 8px; margin-bottom: 15px; position: relative;">
+            <div style="width: 16px; height: 3px; background: white; position: absolute; bottom: 5px; left: 14px; border-radius: 2px;"></div>
         </div>
-        <h2>กรุณาหมุนหน้าจอเป็น "แนวนอน"</h2>
+        <h3>กรุณาหมุนหน้าจอเป็น "แนวนอน"</h3>
     </div>
 
     <div id="game-screen">
@@ -208,12 +220,13 @@
             </div>
         </div>
 
+        <!-- กล่องคำถามเวทมนตร์ ย้ายมาลอยตรงกลางจอ -->
         <div id="math-box">
             <div id="math-box-wrapper">
                 <div id="math-content">
                     <h2 id="question">10 + 5 = ?</h2>
                     <input type="number" id="answer-input" placeholder="ตอบ" autocomplete="off" inputmode="numeric">
-                    <button class="btn-magic" style="padding: 1vh 2vw; font-size: 2.2vh;" onclick="checkAnswer()">ยิงพลัง</button>
+                    <button class="btn-magic" style="margin:0;" onclick="checkAnswer()">ยิงพลัง</button>
                 </div>
                 <div id="timer-bg"><div id="timer-fill"></div></div>
             </div>
@@ -235,7 +248,6 @@
     </div>
 
     <script>
-        // เคลียร์โค้ดปรับขนาดหน้าจอด้วย JS ทิ้งไป เพราะเราใช้ CSS บังคับตายตัวแล้ว (เสถียรกว่า)
         let playerHp = 100;
         let enemyHp = 100;
         let correctAnswer = 0;
@@ -278,7 +290,7 @@
 
             setTimeout(() => {
                 attacker.src = `character_${colorPrefix}_walk_a.png`;
-                attackSound.cloneNode(true).play();
+                attackSound.cloneNode(true).play().catch(e => console.log("รอการกดจากผู้ใช้ก่อนเล่นเสียง"));
                 
                 if(target.id === 'enemy') {
                     target.src = "character_purple_hit.png";
@@ -291,8 +303,8 @@
                 updateUI();
                 
                 setTimeout(() => {
-                    attacker.style.left = attacker.id === 'player' ? "15%" : "";
-                    attacker.style.right = attacker.id === 'enemy' ? "15%" : "";
+                    attacker.style.left = attacker.id === 'player' ? "10%" : "";
+                    attacker.style.right = attacker.id === 'enemy' ? "10%" : "";
                     
                     attacker.src = `character_${colorPrefix}_idle.png`;
                     attacker.classList.add('idle-anim');
@@ -343,7 +355,7 @@
             
             let inputField = document.getElementById('answer-input');
             inputField.value = '';
-            inputField.focus();
+            inputField.focus(); // เด้งคีย์บอร์ด
 
             let timerFill = document.getElementById('timer-fill');
             timerFill.style.transition = 'none';
@@ -361,6 +373,8 @@
         function checkAnswer() {
             let userAns = parseInt(document.getElementById('answer-input').value);
             if (isNaN(userAns)) return; 
+            
+            document.getElementById('answer-input').blur(); // เก็บแป้นพิมพ์ลง
             clearTimeout(countdownTimer); 
 
             document.getElementById('math-box').style.display = 'none';
@@ -392,6 +406,7 @@
         }
 
         function magicFailed() {
+            document.getElementById('answer-input').blur(); // เก็บแป้นพิมพ์ลง
             document.getElementById('math-box').style.display = 'none';
             document.getElementById('action-buttons').style.display = 'block';
             isPlayerTurn = false;
@@ -412,7 +427,7 @@
         function showGameOver(isWin) {
             let menu = document.getElementById('game-over-menu');
             let title = document.getElementById('game-over-title');
-            title.innerText = isWin ? "🎉 ชนะแล้ว ยอดเยี่ยม!" : "💀 พ่ายแพ้ ลองใหม่นะ!";
+            title.innerText = isWin ? "🎉 ชนะแล้ว!" : "💀 พ่ายแพ้!";
             title.style.color = isWin ? "#fff" : "#ffcccc";
             menu.style.display = 'flex';
         }
@@ -427,11 +442,10 @@
             updateUI();
         }
 
-        // ป้องกันอาการหน้าจอเด้งเวลาพิมพ์คำตอบเสร็จแล้วกด Enter (สำคัญมากสำหรับมือถือ)
+        // กันหน้าจอขยับเวลาพิมพ์แล้วกดปุ่ม Enter
         document.getElementById("answer-input").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault(); 
-                this.blur(); // สั่งให้หุบคีย์บอร์ดลงทันที
                 checkAnswer();
             }
         });
